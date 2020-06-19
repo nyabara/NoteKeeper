@@ -59,7 +59,6 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
                     Intent intent=new Intent(mContext,NoteActivity.class);
                     intent.putExtra(NoteActivity.NOTE_POSITION,currentposition);
                     mContext.startActivity(intent);
-
                 }
             });
         }
