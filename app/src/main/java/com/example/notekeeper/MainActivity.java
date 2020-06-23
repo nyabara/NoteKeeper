@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mMrecyclerviewItem = findViewById(R.id.note_list);
         //mLinearlayout = new LinearLayoutManager(this);
         //mMrecyclerviewItem.setLayoutManager(mLinearlayout);
-        GridLayoutManager gridLayoutManager=new GridLayoutManager(this,2);
+        GridLayoutManager gridLayoutManager=new GridLayoutManager(this,getResources().getInteger(R.integer.grid_space_column));
         mMrecyclerviewItem.setLayoutManager(gridLayoutManager);
         List<CourseInfo> courses=DataManager.getInstance().getCourses();
         CourseRecyclerViewAdapter courseRecyclerViewAdapter=new CourseRecyclerViewAdapter(this,courses);
@@ -108,11 +108,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id=menuItem.getItemId();
         if (id==R.id.notes)
             DisplayNoteInfoList();
+        else if (id==R.id.nav_share){
+           handleSelection(R.string.sharemessage);
+
+        }
         else if (id==R.id.ncourse)
             DisplayCourseInfoList();
         DrawerLayout drawerLayout=findViewById(R.id.drawer_layout);
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+
+    }
+
+    private void handleSelection(int message) {
+        View view=findViewById(R.id.note_list);
+        Snackbar.make(view,message,Snackbar.LENGTH_LONG).show();
     }
 
     @Override
