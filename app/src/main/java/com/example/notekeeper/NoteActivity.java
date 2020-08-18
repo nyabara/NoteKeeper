@@ -39,7 +39,6 @@ public class NoteActivity extends AppCompatActivity {
 
         mMtitle = findViewById(R.id.note_title_text);
         mMtext = findViewById(R.id.note_body_text);
-
         ViewModelProvider viewModelProvider=new ViewModelProvider(getViewModelStore(),ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()));
         mViewModel=viewModelProvider.get(NoteActivityViewModel.class);
 

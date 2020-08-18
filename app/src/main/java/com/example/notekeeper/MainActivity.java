@@ -1,6 +1,7 @@
 package com.example.notekeeper;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -36,7 +37,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private AppBarConfiguration mAppBarConfiguration;
     private NoteRecyclerViewAdapter mNoteRecyclerViewAdapter;
     private RecyclerView mMrecyclerviewItem;
-    private LinearLayoutManager mLinearlayout;
+    private LinearLayoutManager mNoteslayout;
+    private NotekeeperOpenHelper mOpenHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
+        mOpenHelper=new NotekeeperOpenHelper(this);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -53,34 +56,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-       /* mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow,
-                R.id.nav_tools, R.id.nav_share, R.id.nav_send)
-                .setDrawerLayout(drawer)
-                .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController);*/
         ActionBarDrawerToggle actionBarDrawerToggle=new ActionBarDrawerToggle(this,drawer,toolbar,R.string.opendrawer,R.string.closedrawer);
         actionBarDrawerToggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
-
+        mMrecyclerviewItem = findViewById(R.id.note_list);
+        mNoteslayout = new LinearLayoutManager(this);
+        DataManager.loadFromDatabase(mOpenHelper);
+        List<NoteInfo> notes=DataManager.getInstance().getNotes();
+        mNoteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this,notes);
         DisplayNoteInfoList();
     }
 
+    @Override
+    protected void onDestroy() {
+        mOpenHelper.close();
+        super.onDestroy();
+    }
+
     private void DisplayNoteInfoList() {
-        mMrecyclerviewItem = findViewById(R.id.note_list);
-        mLinearlayout = new LinearLayoutManager(this);
-        mMrecyclerviewItem.setLayoutManager(mLinearlayout);
-        List<NoteInfo> notes=DataManager.getInstance().getNotes();
-        mNoteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this,notes);
+
+
+        mMrecyclerviewItem.setLayoutManager(mNoteslayout);
         mMrecyclerviewItem.setAdapter(mNoteRecyclerViewAdapter);
-        mMrecyclerviewItem.setVisibility(View.VISIBLE);
+        //SQLiteDatabase db=mOpenHelper.getReadableDatabase();
+        // mOpenHelper.getReadableDatabase();
         NavigationView navigationView=findViewById(R.id.nav_view);
+
         Menu menu=navigationView.getMenu();
         menu.findItem(R.id.notes).setChecked(true);
+
     }
     private void DisplayCourseInfoList() {
         mMrecyclerviewItem = findViewById(R.id.note_list);
