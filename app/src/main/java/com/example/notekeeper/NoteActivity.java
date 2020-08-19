@@ -1,6 +1,8 @@
 package com.example.notekeeper;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +18,8 @@ import android.widget.Spinner;
 
 import java.util.List;
 
+import static com.example.notekeeper.NoteKeeperDatabaseContract.*;
+
 public class NoteActivity extends AppCompatActivity {
     public static final int POSITION_NOT_SET = -1;
     public static final String NOTE_POSITION ="com.example.notekeeper.NOTE_POSITION";
@@ -29,6 +33,11 @@ public class NoteActivity extends AppCompatActivity {
     private int mNotePosition;
     private boolean mIscancelling;
     private NoteActivityViewModel mViewModel;
+    private NotekeeperOpenHelper mOpenHelper;
+    private Cursor mNotescursor;
+    private int mCourseidPos;
+    private int mTitlePos;
+    private int mTextPos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +46,7 @@ public class NoteActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        mOpenHelper = new NotekeeperOpenHelper(this);
         mMtitle = findViewById(R.id.note_title_text);
         mMtext = findViewById(R.id.note_body_text);
         ViewModelProvider viewModelProvider=new ViewModelProvider(getViewModelStore(),ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication()));
@@ -53,7 +63,29 @@ public class NoteActivity extends AppCompatActivity {
         getNoteInfo();
         storeOriginalValues();
         if (!mIsnewnote)
-        setNoteINfoTofields(mSpinner_courses, mMtitle, mMtext);
+        //setNoteINfoTofields();
+        loadNotesFromDatabase();
+    }
+
+    private void loadNotesFromDatabase() {
+        SQLiteDatabase db =mOpenHelper.getReadableDatabase();
+        String courseid="android_intents";
+        String titlestart="Dynamic";
+        String selection= NoteInfoEntry.COLUMN_COURSE_ID + " =? AND " + NoteInfoEntry.COLUMN_NOTE_TITLE + " LIKE ?";
+        String[] selectionArgs={courseid,titlestart + "%"};
+        String[] columnsNote={
+           NoteInfoEntry.COLUMN_COURSE_ID,
+           NoteInfoEntry.COLUMN_NOTE_TITLE,
+           NoteInfoEntry.COLUMN_NOTE_TEXT
+        };
+        mNotescursor = db.query(NoteInfoEntry.TABLE_NAME,columnsNote,selection,selectionArgs,null,null,null);
+        mCourseidPos = mNotescursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
+        mTitlePos = mNotescursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
+        mTextPos = mNotescursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
+        mNotescursor.moveToNext();
+        setNoteINfoTofields();
+
+
     }
 
     @Override
@@ -82,13 +114,22 @@ public class NoteActivity extends AppCompatActivity {
 
     }
 
-    private void setNoteINfoTofields(Spinner mSpinner_courses, EditText mMtitle, EditText mMtext) {
-        List<CourseInfo> courses=DataManager.getInstance().getCourses();
-        int mcourserindex=courses.indexOf(mNote.getCourse());
-        mSpinner_courses.setSelection(mcourserindex);
+    @Override
+    protected void onDestroy() {
+        mOpenHelper.close();
+        super.onDestroy();
+    }
 
-        mMtitle.setText(mNote.getTitle());
-        mMtext.setText(mNote.getText());
+    private void setNoteINfoTofields() {
+         String courseID=mNotescursor.getString(mCourseidPos);
+         String notetitle=mNotescursor.getString(mTitlePos);
+         String notetext=mNotescursor.getString(mTextPos);
+         CourseInfo course=DataManager.getInstance().getCourse(courseID);
+        List<CourseInfo> courses=DataManager.getInstance().getCourses();
+        int mcourserindex=courses.indexOf(course);
+        mSpinner_courses.setSelection(mcourserindex);
+        mMtitle.setText(notetitle);
+        mMtext.setText(notetext);
 
     }
 
@@ -146,7 +187,7 @@ public class NoteActivity extends AppCompatActivity {
             ++mNotePosition;
             mNote=DataManager.getInstance().getNotes().get(mNotePosition);
             storeOriginalValues();
-            setNoteINfoTofields(mSpinner_courses,mMtitle,mMtext);
+            setNoteINfoTofields();
             invalidateOptionsMenu();
         }
         else if (id==R.id.action_send)

@@ -29,7 +29,11 @@ public class DataManager {
                 , null, null, null, CourseInfoEntry.COLUMN_COURSE_TITLE + " DESC");
         loadCoursesFromDatabase(coursecursor);
         String noteOrderby=NoteInfoEntry.COLUMN_COURSE_ID + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
-        String[] columnsNotes = {NoteInfoEntry.COLUMN_NOTE_TITLE, NoteInfoEntry.COLUMN_NOTE_TEXT, NoteInfoEntry.COLUMN_COURSE_ID};
+        String[] columnsNotes = {
+                NoteInfoEntry.COLUMN_NOTE_TITLE,
+                NoteInfoEntry.COLUMN_NOTE_TEXT,
+                NoteInfoEntry.COLUMN_COURSE_ID};
+
         Cursor notescursor = db.query(NoteInfoEntry.TABLE_NAME, columnsNotes,
                 null, null, null, null, noteOrderby);
         loadNotesFromDatabase(notescursor);
