@@ -20,7 +20,7 @@ public class NoteActivityViewModel extends ViewModel {
         outState.putString(ORIGINAL_TITLE,mOriginaltitleValue);
         outState.putString(ORIGINAL_TEXT,mOriginaltextValue);
     }
-    public void restorestate(Bundle instate)
+    public void restoreState(Bundle instate)
     {
         mOrignalcourseValue=instate.getString(ORIGINAL_NOTE_COURSE_ID);
         mOriginaltitleValue=instate.getString(ORIGINAL_TITLE);

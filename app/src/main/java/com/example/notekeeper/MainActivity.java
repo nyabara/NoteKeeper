@@ -1,9 +1,11 @@
 package com.example.notekeeper;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
+import com.example.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -11,12 +13,13 @@ import android.view.MenuItem;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.navigation.NavigationView;
 
@@ -32,13 +35,16 @@ import android.view.Menu;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+import static com.example.notekeeper.NoteKeeperDatabaseContract.*;
+
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor> {
 
     private AppBarConfiguration mAppBarConfiguration;
     private NoteRecyclerViewAdapter mNoteRecyclerViewAdapter;
     private RecyclerView mMrecyclerviewItem;
     private LinearLayoutManager mNoteslayout;
-    private NotekeeperOpenHelper mOpenHelper;
+    private NotekeeperOpenHelper mDbOpenHelper;
+    private int LOADER_NOTES;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
-        mOpenHelper=new NotekeeperOpenHelper(this);
+        mDbOpenHelper =new NotekeeperOpenHelper(this);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -61,15 +67,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
         mMrecyclerviewItem = findViewById(R.id.note_list);
         mNoteslayout = new LinearLayoutManager(this);
-        DataManager.loadFromDatabase(mOpenHelper);
-        List<NoteInfo> notes=DataManager.getInstance().getNotes();
-        mNoteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this,notes);
+        DataManager.loadFromDatabase(mDbOpenHelper);
+
+        mNoteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this,null);
         DisplayNoteInfoList();
     }
 
     @Override
     protected void onDestroy() {
-        mOpenHelper.close();
+        mDbOpenHelper.close();
         super.onDestroy();
     }
 
@@ -108,6 +114,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        LOADER_NOTES = 0;
+        getSupportLoaderManager().restartLoader(LOADER_NOTES,null,this);
+       //loadNotes();
+    }
+
+    private void loadNotes() {
+        SQLiteDatabase db=mDbOpenHelper.getReadableDatabase();
+        String[] columnsNotes = {
+                NoteInfoEntry.COLUMN_NOTE_TITLE,
+                NoteInfoEntry.COLUMN_COURSE_ID,
+                NoteInfoEntry._ID};
+        String noteOrderby=NoteInfoEntry.COLUMN_COURSE_ID + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
+        Cursor notescursor = db.query(NoteInfoEntry.TABLE_NAME, columnsNotes,
+                null, null, null, null, noteOrderby);
+        mNoteRecyclerViewAdapter.changeCursor(notescursor);
+
+
+    }
+
+    @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         int id=menuItem.getItemId();
         if (id==R.id.notes)
@@ -136,6 +164,49 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             drawerLayout.closeDrawer(GravityCompat.START);
         }else
         super.onBackPressed();
+    }
+
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+        CursorLoader loader=null;
+        if (id==LOADER_NOTES)
+            loader=createNotesLoader();
+        return loader;
+    }
+
+    private CursorLoader createNotesLoader() {
+        return new CursorLoader(this){
+            @Override
+            public Cursor loadInBackground() {
+                SQLiteDatabase db=mDbOpenHelper.getReadableDatabase();
+                String[] columnsNotes = {
+                        NoteInfoEntry.COLUMN_NOTE_TITLE,
+                        NoteInfoEntry.getQName(NoteInfoEntry._ID),
+                        CourseInfoEntry.COLUMN_COURSE_TITLE};
+
+                String noteOrderby=CourseInfoEntry.COLUMN_COURSE_TITLE + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
+                //note_info JOIN course_info ON note-info.course_id=course_info.course_id
+                String tablesWithJoin=NoteInfoEntry.TABLE_NAME + " JOIN " + CourseInfoEntry.TABLE_NAME
+                        + " ON " + NoteInfoEntry.getQName(NoteInfoEntry.COLUMN_COURSE_ID) + " = " +
+                        CourseInfoEntry.getQName(CourseInfoEntry.COLUMN_COURSE_ID);
+             return db.query(tablesWithJoin, columnsNotes,
+                     null, null, null, null, noteOrderby);
+            }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+        if (loader.getId()==LOADER_NOTES)
+            mNoteRecyclerViewAdapter.changeCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        if (loader.getId()==LOADER_NOTES)
+            mNoteRecyclerViewAdapter.changeCursor(null);
+
     }
     /*@Override
     public boolean onSupportNavigateUp() {

@@ -32,7 +32,8 @@ public class DataManager {
         String[] columnsNotes = {
                 NoteInfoEntry.COLUMN_NOTE_TITLE,
                 NoteInfoEntry.COLUMN_NOTE_TEXT,
-                NoteInfoEntry.COLUMN_COURSE_ID};
+                NoteInfoEntry.COLUMN_COURSE_ID,
+                NoteInfoEntry._ID};
 
         Cursor notescursor = db.query(NoteInfoEntry.TABLE_NAME, columnsNotes,
                 null, null, null, null, noteOrderby);
@@ -43,14 +44,16 @@ public class DataManager {
         int courseidPos=cursor.getColumnIndex(NoteInfoEntry.COLUMN_COURSE_ID);
         int notetitlePos=cursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         int notetextPos=cursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
+        int idPos=cursor.getColumnIndex(NoteInfoEntry._ID);
         DataManager dm=getInstance();
         dm.mNotes.clear();
         while (cursor.moveToNext()){
             String courseid=cursor.getString(courseidPos);
             String noteTitle=cursor.getString(notetitlePos);
             String notetext=cursor.getString(notetextPos);
+            int id=cursor.getInt(idPos);
             CourseInfo noteCourse=dm.getCourse(courseid);
-            NoteInfo note=new NoteInfo(noteCourse,noteTitle,notetext);
+            NoteInfo note=new NoteInfo(id,noteCourse,noteTitle,notetext);
             dm.mNotes.add(note);
         }
         cursor.close();
@@ -83,7 +86,7 @@ public class DataManager {
     }
 
     public int createNewNote() {
-        NoteInfo note = new NoteInfo(null, null, null);
+        NoteInfo note = new NoteInfo(0,null, null, null);
         mNotes.add(note);
         return mNotes.size()-1;
     }
@@ -150,17 +153,17 @@ public class DataManager {
         course.getModule("android_intents_m01").setComplete(true);
         course.getModule("android_intents_m02").setComplete(true);
         course.getModule("android_intents_m03").setComplete(true);
-        mNotes.add(new NoteInfo(course, "Dynamic intent resolution",
+        mNotes.add(new NoteInfo(0, course, "Dynamic intent resolution",
                 "Wow, intents allow components to be resolved at runtime"));
-        mNotes.add(new NoteInfo(course, "Delegating intents",
+        mNotes.add(new NoteInfo(1, course, "Delegating intents",
                 "PendingIntents are powerful; they delegate much more than just a component invocation"));
 
         course = dm.getCourse("android_async");
         course.getModule("android_async_m01").setComplete(true);
         course.getModule("android_async_m02").setComplete(true);
-        mNotes.add(new NoteInfo(course, "Service default threads",
+        mNotes.add(new NoteInfo(2,course, "Service default threads",
                 "Did you know that by default an Android Service will tie up the UI thread?"));
-        mNotes.add(new NoteInfo(course, "Long running operations",
+        mNotes.add(new NoteInfo(3,course, "Long running operations",
                 "Foreground Services can be tied to a notification icon"));
 
         course = dm.getCourse("java_lang");
@@ -171,18 +174,18 @@ public class DataManager {
         course.getModule("java_lang_m05").setComplete(true);
         course.getModule("java_lang_m06").setComplete(true);
         course.getModule("java_lang_m07").setComplete(true);
-        mNotes.add(new NoteInfo(course, "Parameters",
+        mNotes.add(new NoteInfo(4, course, "Parameters",
                 "Leverage variable-length parameter lists"));
-        mNotes.add(new NoteInfo(course, "Anonymous classes",
+        mNotes.add(new NoteInfo(5,course, "Anonymous classes",
                 "Anonymous classes simplify implementing one-use types"));
 
         course = dm.getCourse("java_core");
         course.getModule("java_core_m01").setComplete(true);
         course.getModule("java_core_m02").setComplete(true);
         course.getModule("java_core_m03").setComplete(true);
-        mNotes.add(new NoteInfo(course, "Compiler options",
+        mNotes.add(new NoteInfo(6,course, "Compiler options",
                 "The -jar option isn't compatible with with the -cp option"));
-        mNotes.add(new NoteInfo(course, "Serialization",
+        mNotes.add(new NoteInfo(7,course, "Serialization",
                 "Remember to include SerialVersionUID to assure version compatibility"));
     }
 

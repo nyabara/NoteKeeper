@@ -76,8 +76,7 @@ public class NoteListActivity extends AppCompatActivity {
       final RecyclerView mrecyclerview=findViewById(R.id.list_note);
       final LinearLayoutManager setLinearlayout=new LinearLayoutManager(this);
       mrecyclerview.setLayoutManager(setLinearlayout);
-      List<NoteInfo> notes=DataManager.getInstance().getNotes();
-        mNoteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this,notes);
+        mNoteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this,null);
       mrecyclerview.setAdapter(mNoteRecyclerViewAdapter);
       mrecyclerview.setVisibility(View.VISIBLE);
     }
