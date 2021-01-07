@@ -36,6 +36,7 @@ import android.view.Menu;
 import java.util.List;
 
 import static com.example.notekeeper.NoteKeeperDatabaseContract.*;
+import static com.example.notekeeper.NoteKeeperProviderContract.*;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -170,12 +171,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
         CursorLoader loader=null;
-        if (id==LOADER_NOTES)
-            loader=createNotesLoader();
+        if (id==LOADER_NOTES){
+            final String[] columnsNotes = {
+                    Notes.COLUMN_NOTE_TITLE,
+                    Notes._ID,
+                    Notes.COLUMN_COURSE_TITLE};
+
+            final String noteOrderby=Notes.COLUMN_COURSE_TITLE + "," + Notes.COLUMN_NOTE_TITLE;
+            loader=new CursorLoader(this, Notes.CONTENT_EXPANDED_URL,columnsNotes,null,null, noteOrderby);
+        }
+            //loader=createNotesLoader();
         return loader;
     }
 
     private CursorLoader createNotesLoader() {
+
         return new CursorLoader(this){
             @Override
             public Cursor loadInBackground() {

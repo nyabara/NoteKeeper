@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
 
+import static com.example.notekeeper.NoteKeeperDatabaseContract.*;
+
 public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerViewAdapter.ViewHolder> {
     private final Context mContext;
     //public final List<NoteInfo>mNotes;
@@ -33,7 +35,7 @@ public class NoteRecyclerViewAdapter extends RecyclerView.Adapter<NoteRecyclerVi
         if (mCursor==null)
             return;
         //Get Column indexes from mCursor
-        mMCoursePos = mCursor.getColumnIndex(NoteKeeperDatabaseContract.CourseInfoEntry.COLUMN_COURSE_TITLE);
+        mMCoursePos = mCursor.getColumnIndex(CourseInfoEntry.COLUMN_COURSE_TITLE);
         mMNoteTitlePos = mCursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         mMIdPos = mCursor.getColumnIndex(NoteInfoEntry._ID);
     }
