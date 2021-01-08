@@ -1,6 +1,8 @@
 package com.example.notekeeper;
 
 import android.content.ContentProvider;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -12,6 +14,7 @@ import static com.example.notekeeper.NoteKeeperDatabaseContract.*;
 import static com.example.notekeeper.NoteKeeperProviderContract.*;
 
 public class NoteKeeperProvider extends ContentProvider {
+    public static final String MIME_VENDOR_TYPE = "vnd." + Authority + ".";
     private NotekeeperOpenHelper mDbOpenHelper;
     public NoteKeeperProvider() {
     }
@@ -23,10 +26,13 @@ public class NoteKeeperProvider extends ContentProvider {
 
     public static final int NOTES_EXPANDED = 2;
 
+    public static final int NOTES_ROW = 3;
+
     static {
         sUriMatcher.addURI(Authority, Courses.PATH, COURSES);
         sUriMatcher.addURI(Authority,Notes.PATH, NOTES);
         sUriMatcher.addURI(Authority,Notes.PATH_EXPANDED, NOTES_EXPANDED);
+        sUriMatcher.addURI(Authority,Notes.PATH+"/#", NOTES_ROW);
     }
 
     @Override
@@ -37,15 +43,48 @@ public class NoteKeeperProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        // TODO: Implement this to handle requests for the MIME type of the data
-        // at the given URI.
-        throw new UnsupportedOperationException("Not yet implemented");
+        String mimeType=null;
+        int uriMatcher=sUriMatcher.match(uri);
+        switch (uriMatcher){
+            case COURSES:
+                mimeType= ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Courses.PATH;
+                break;
+            case NOTES:
+                mimeType= ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Notes.PATH;
+                break;
+            case NOTES_EXPANDED:
+                mimeType= ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Notes.PATH_EXPANDED;
+                break;
+            case NOTES_ROW:
+                mimeType= ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + MIME_VENDOR_TYPE + Notes.PATH;
+                break;
+
+        }
+
+        return mimeType;
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        // TODO: Implement this to handle requests to insert a new row.
-        throw new UnsupportedOperationException("Not yet implemented");
+       SQLiteDatabase db=mDbOpenHelper.getWritableDatabase();
+       long rowId=-1;
+       Uri rowUri=null;
+       int uriMatcher=sUriMatcher.match(uri);
+       switch (uriMatcher){
+           case NOTES:
+               rowId=db.insert(NoteInfoEntry.TABLE_NAME,null,values);
+               rowUri= ContentUris.withAppendedId(Notes.CONTENT_URI,rowId);
+               break;
+           case COURSES:
+               rowId=db.insert(CourseInfoEntry.TABLE_NAME,null,values);
+               rowUri= ContentUris.withAppendedId(Courses.CONTENT_URI,rowId);
+               break;
+           case NOTES_EXPANDED:
+               //throws unexpected exception
+               break;
+       }
+       return rowUri;
+
     }
 
     @Override
@@ -71,6 +110,13 @@ public class NoteKeeperProvider extends ContentProvider {
                 break;
             case NOTES_EXPANDED:
                 cursor=expandedNotesQuery(db,projection,selection,selectionArgs,sortOrder);
+                break;
+            case NOTES_ROW:
+                long rowId=ContentUris.parseId(uri);
+                String rowSelection=NoteInfoEntry._ID + " = ?";
+                String[] rowSelectionArgs=new String[]{Long.toString(rowId)};
+                cursor=db.query(NoteInfoEntry.TABLE_NAME,projection,rowSelection,rowSelectionArgs,null,null,null);
+
         }
         return cursor;
 

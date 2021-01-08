@@ -1,5 +1,6 @@
 package com.example.notekeeper;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -17,6 +18,7 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -50,6 +52,7 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
     private SimpleCursorAdapter mAdapterCourses;
     private boolean mCoursesQueryFinished;
     private boolean mNotesQueryFinished;
+    private Uri mNoteUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +115,7 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
         mTitlePos = mNotescursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TITLE);
         mTextPos = mNotescursor.getColumnIndex(NoteInfoEntry.COLUMN_NOTE_TEXT);
         mNotescursor.moveToNext();
-        displayNote();
+        //displayNote();
 
 
     }
@@ -193,15 +196,16 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
         values.put(NoteInfoEntry.COLUMN_COURSE_ID,"");
         values.put(NoteInfoEntry.COLUMN_NOTE_TITLE,"");
         values.put(NoteInfoEntry.COLUMN_NOTE_TEXT,"");
-        AsyncTask task=new AsyncTask() {
-            @Override
-            protected Object doInBackground(Object[] objects) {
-                SQLiteDatabase db=mDbOpenHelper.getWritableDatabase();
-                mNoteId=(int) db.insert(NoteInfoEntry.TABLE_NAME,null,values);
-                return null;
-            }
-        };
-        task.execute();
+        mNoteUri = getContentResolver().insert(Notes.CONTENT_URI,values);
+//        AsyncTask task=new AsyncTask() {
+//            @Override
+//            protected Object doInBackground(Object[] objects) {
+//                SQLiteDatabase db=mDbOpenHelper.getWritableDatabase();
+//                mNoteId=(int) db.insert(NoteInfoEntry.TABLE_NAME,null,values);
+//                return null;
+//            }
+//        };
+//        task.execute();
     }
 
     private void saveNote() {
@@ -355,22 +359,30 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private CursorLoader createLoaderNotes() {
         mNotesQueryFinished = false;
-        return new CursorLoader(this){
-            @Override
-            public Cursor loadInBackground() {
-                SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
-                String selection= NoteInfoEntry._ID + " = ?";
-                String[] selectionArgs={Integer.toString(mNoteId)};
-                String[] columnsNote={
-                        NoteInfoEntry.COLUMN_COURSE_ID,
-                        NoteInfoEntry.COLUMN_NOTE_TITLE,
-                        NoteInfoEntry.COLUMN_NOTE_TEXT
-                };
-                return db.query(NoteInfoEntry.TABLE_NAME,columnsNote,selection,selectionArgs,
-                        null,null,null);
-
-            }
+        String[] columnsNote={
+                Notes.COLUMN_COURSE_ID,
+                Notes.COLUMN_NOTE_TITLE,
+                Notes.COLUMN_NOTE_TEXT
         };
+        mNoteUri= ContentUris.withAppendedId(Notes.CONTENT_URI,mNoteId);
+        return new CursorLoader(this,mNoteUri,columnsNote,null,null,null);
+//        return new CursorLoader(this){
+//            @Override
+//            public Cursor loadInBackground() {
+//                SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
+//                String selection= NoteInfoEntry._ID + " = ?";
+//                String[] selectionArgs={Integer.toString(mNoteId)};
+//                String[] columnsNote={
+//                        NoteInfoEntry.COLUMN_COURSE_ID,
+//                        NoteInfoEntry.COLUMN_NOTE_TITLE,
+//                        NoteInfoEntry.COLUMN_NOTE_TEXT
+//                };
+//
+//                return db.query(NoteInfoEntry.TABLE_NAME,columnsNote,selection,selectionArgs,
+//                        null,null,null);
+//
+//            }
+//        };
     }
 
     @Override
