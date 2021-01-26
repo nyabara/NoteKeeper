@@ -3,12 +3,17 @@ package com.example.notekeeper;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import com.example.notekeeper.NoteKeeperDatabaseContract.NoteInfoEntry;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.StrictMode;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -55,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
         mDbOpenHelper =new NotekeeperOpenHelper(this);
+        enableStrictMode();
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -68,10 +74,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
         mMrecyclerviewItem = findViewById(R.id.note_list);
         mNoteslayout = new LinearLayoutManager(this);
-        DataManager.loadFromDatabase(mDbOpenHelper);
+        //DataManager.loadFromDatabase(mDbOpenHelper);
 
         mNoteRecyclerViewAdapter = new NoteRecyclerViewAdapter(this,null);
         DisplayNoteInfoList();
+    }
+
+    private void enableStrictMode() {
+        if(BuildConfig.DEBUG){
+            StrictMode.ThreadPolicy policy=new StrictMode.ThreadPolicy.Builder()
+                    .detectAll()
+                    .penaltyLog()
+                    .build();
+            StrictMode.setThreadPolicy(policy);
+        }
     }
 
     @Override
@@ -115,11 +131,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id=item.getItemId();
+        if (id==R.id.note_backup){
+            backUpNotes();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void backUpNotes() {
+        Intent intent=new Intent(this,NoteBackupService.class);
+        intent.putExtra(NoteBackupService.EXTRA_COURSE_ID,NoteBackup.ALL_COURSES);
+        startService(intent);
+        //NoteBackup.doBackup(MainActivity.this,NoteBackup.ALL_COURSES);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         LOADER_NOTES = 0;
         getSupportLoaderManager().restartLoader(LOADER_NOTES,null,this);
        //loadNotes();
+        openDrawer();
+    }
+
+    private void openDrawer() {
+        Handler handler=new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                DrawerLayout drawer=(DrawerLayout) findViewById(R.id.drawer_layout);
+                drawer.openDrawer(GravityCompat.START);
+            }
+        },1000);
     }
 
     private void loadNotes() {
@@ -143,14 +187,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             DisplayNoteInfoList();
         else if (id==R.id.nav_share){
            handleSelection(R.string.sharemessage);
-
         }
         else if (id==R.id.ncourse)
             DisplayCourseInfoList();
         DrawerLayout drawerLayout=findViewById(R.id.drawer_layout);
         drawerLayout.closeDrawer(GravityCompat.START);
         return true;
-
     }
 
     private void handleSelection(int message) {

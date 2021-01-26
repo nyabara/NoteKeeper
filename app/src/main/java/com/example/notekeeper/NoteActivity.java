@@ -18,11 +18,12 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 
-import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 
@@ -32,7 +33,7 @@ import static com.example.notekeeper.NoteKeeperProviderContract.*;
 public class NoteActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final int ID_NOT_SET = -1;
     public static final String NOTE_ID ="com.example.notekeeper.NOTE_POSITION";
-    private static final String LOG=NoteActivity.class.getSimpleName();
+    private static final String TAG =NoteActivity.class.getSimpleName();
     public static final int LOADER_NOTES = 0;
     public static final int LOADER_COURSES = 1;
     //public static final String NOTE_POSITION = NOTE_POSITION;
@@ -192,11 +193,47 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
 //        DataManager dm=DataManager.getInstance();
 //        mNoteId = dm.createNewNote();
         //mNote=dm.getNotes().get(mNotePosition);
+        AsyncTask<ContentValues,Integer,Uri> task=new AsyncTask<ContentValues, Integer, Uri>() {
+            private ProgressBar mProgressBar;
+
+//            @Override
+//            protected void onPreExecute() {
+//                mProgressBar=(ProgressBar) findViewById(R.id.progress_bar);
+//                mProgressBar.setVisibility(View.VISIBLE);
+//                mProgressBar.setProgress(1);
+//
+//            }
+
+            @Override
+            protected Uri doInBackground(ContentValues... contentValues) {
+                Log.d(TAG,"doInBackground - thread: "+ Thread.currentThread().getId());
+                ContentValues insertValues=contentValues[0];
+                Uri resultUri=getContentResolver().insert(Notes.CONTENT_URI,insertValues);
+                simulateLongRunningWork();
+                publishProgress(2);
+                simulateLongRunningWork();
+                publishProgress(3);
+                return resultUri;
+            }
+
+//            @Override
+//            protected void onProgressUpdate(Integer... values) {
+//                int progressValues=values[0];
+//                mProgressBar.setProgress(progressValues);
+//            }
+
+            @Override
+            protected void onPostExecute(Uri uri) {
+                Log.d(TAG,"onPostExecute - thread: "+ Thread.currentThread().getId());
+                mNoteUri=uri;
+            }
+        };
         final ContentValues values=new ContentValues();
         values.put(NoteInfoEntry.COLUMN_COURSE_ID,"");
         values.put(NoteInfoEntry.COLUMN_NOTE_TITLE,"");
         values.put(NoteInfoEntry.COLUMN_NOTE_TEXT,"");
-        mNoteUri = getContentResolver().insert(Notes.CONTENT_URI,values);
+        Log.d(TAG,"Call to execute - thread: "+ Thread.currentThread().getId());
+        task.execute(values);
 //        AsyncTask task=new AsyncTask() {
 //            @Override
 //            protected Object doInBackground(Object[] objects) {
@@ -206,6 +243,10 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
 //            }
 //        };
 //        task.execute();
+    }
+
+    private void simulateLongRunningWork() {
+
     }
 
     private void saveNote() {
@@ -282,13 +323,24 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
             displayNote();
             invalidateOptionsMenu();
         }
+
         else if (id==R.id.action_send)
         {
             sendEmail();
             return true;
         }
+        else if(id==R.id.action_reminder){
+            showNotificationReminder();
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showNotificationReminder() {
+        String noteText=mMtext.getText().toString();
+        String noteTitle=mMtitle.getText().toString();
+        int noteId=(int)ContentUris.parseId(mNoteUri);
+        NoteReminderNotification.notify(this,noteTitle,noteText,noteId);
     }
 
     private void sendEmail() {
@@ -310,12 +362,12 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
             {
                deletNoteFromDatabase();
             } else {
-                storePreviousNoteValues();
+                //storePreviousNoteValues();
             }
         else {
             saveNote();
         }
-        Log.d(LOG,"onPause"+ mNoteId);
+        Log.d(TAG,"onPause"+ mNoteId);
 
     }
 

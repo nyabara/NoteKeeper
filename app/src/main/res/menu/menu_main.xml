@@ -19,4 +19,8 @@
         android:id="@+id/action_send"
         android:orderInCategory="102"
         android:title="send as email" />
+    <item
+        android:id="@+id/action_reminder"
+        android:orderInCategory="103"
+        android:title="Reminder" />
 </menu>
