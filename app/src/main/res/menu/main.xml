@@ -7,6 +7,11 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_upload"
+        android:orderInCategory="100"
+        android:title="Upload Notes"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/note_backup"
         android:orderInCategory="100"
         android:title="BackUp"

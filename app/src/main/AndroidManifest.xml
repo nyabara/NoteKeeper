@@ -10,8 +10,13 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".NoteBackupService"
+            android:name=".NoteUploaderJobService"
+            android:enabled="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false"></service>
+        <service
+            android:name=".NoteBackupService"
+            android:exported="false" />
 
         <provider
             android:name=".NoteKeeperProvider"
