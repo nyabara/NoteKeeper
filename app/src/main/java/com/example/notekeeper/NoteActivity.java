@@ -1,5 +1,7 @@
 package com.example.notekeeper;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -18,6 +20,7 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -164,6 +167,7 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
         mSpinner_courses.setSelection(mcourserindex);
         mMtitle.setText(notetitle);
         mMtext.setText(notetext);
+        CourseEventBroadCastHelper.sendEventBroadcast(this,courseID,"Editing note");
 
     }
 
@@ -340,7 +344,22 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
         String noteText=mMtext.getText().toString();
         String noteTitle=mMtitle.getText().toString();
         int noteId=(int)ContentUris.parseId(mNoteUri);
-        NoteReminderNotification.notify(this,noteTitle,noteText,noteId);
+        //NoteReminderNotification.notify(this,noteTitle,noteText,noteId);
+
+        Intent intent=new Intent(this,NoteReminderReceiver.class);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_TITLE,noteTitle);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_TEXT,noteText);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_ID,noteId);
+
+        PendingIntent pendingIntent=PendingIntent
+                .getBroadcast(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        AlarmManager alarmManager=(AlarmManager) getSystemService(ALARM_SERVICE);
+        long currentTimeMilliseconds= SystemClock.elapsedRealtime();
+        long ONE_HOUR=60*60*1000;
+        long TEN_SECONDS=10*1000;
+        long alarmTime=currentTimeMilliseconds+TEN_SECONDS;
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME,alarmTime,pendingIntent);
     }
 
     private void sendEmail() {
