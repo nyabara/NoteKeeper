@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="5dp"
     android:visibility="visible"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".NoteActivity"
@@ -18,11 +17,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
-        android:nextFocusRight="@+id/note_title_text"
         android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.888"
+        app:layout_constraintEnd_toStartOf="@+id/guideline"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -35,7 +31,6 @@
         android:gravity="start|top"
         android:hint="@string/note_title_hint"
         android:inputType="textMultiLine"
-        android:nextFocusRight="@+id/note_body_text"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="@+id/spinner_courses"
         app:layout_constraintStart_toStartOf="@+id/spinner_courses"
@@ -45,27 +40,19 @@
         android:id="@+id/note_body_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:ems="10"
         android:gravity="start|top"
         android:hint="@string/note_text_hint"
         android:inputType="textMultiLine"
         android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="@+id/note_title_text"
-        app:layout_constraintStart_toStartOf="@+id/note_title_text"
-        app:layout_constraintTop_toBottomOf="@+id/note_title_text" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guideline"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <view
-        android:id="@+id/module_status"
-        class="com.example.notekeeper.ModuleStatusView"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="@+id/note_body_text"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/note_body_text"
-        app:layout_constraintTop_toBottomOf="@+id/note_body_text"
-        app:outlineColor="@color/light_blue_400"
-        app:outlineWidth="5dp"
-        app:shape="circle" />
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.50073206" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -24,7 +24,6 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.SimpleCursorAdapter;
@@ -57,6 +56,7 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
     private boolean mCoursesQueryFinished;
     private boolean mNotesQueryFinished;
     private Uri mNoteUri;
+    private ModuleStatusView mModuleStatusView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +90,19 @@ public class NoteActivity extends AppCompatActivity implements LoaderManager.Loa
         //setNoteINfoTofields();
         //loadNoteData();
             getSupportLoaderManager().initLoader(LOADER_NOTES,null, this);
+        mModuleStatusView = (ModuleStatusView)findViewById(R.id.module_status);
+        LoadModuleStatusValues();
+
+    }
+
+    private void LoadModuleStatusValues() {
+        int totalNumberOfModules=11;
+        int completedNumberOfModules=7;
+        boolean[] moduleStatus=new boolean[totalNumberOfModules];
+        for (int moduleIndex=0;moduleIndex<completedNumberOfModules;moduleIndex++){
+            moduleStatus[moduleIndex]=true;
+            mModuleStatusView.setModuleStatus(moduleStatus);
+        }
     }
 
     private void loadCourseData() {
